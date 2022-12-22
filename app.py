@@ -1,9 +1,6 @@
 import pyrebase
 from fastapi import FastAPI
 
-app = FastAPI()
-
-
 
 config = {
     "apiKey": "AIzaSyBiM7pShglQoWESauwAhsmnDFYzFrBwj3k",
@@ -16,14 +13,16 @@ config = {
     "databaseURL": ""
 }
 
-
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
+app = FastAPI()
+
 
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
 
 
 @app.post("/signup/")
@@ -41,5 +40,22 @@ async def login(email: str, password: str):
     try:
         login_user = auth.sign_in_with_email_and_password(email, password)
         return {"msg": login_user}
+    except Exception as e:
+        return {"error": e}
+
+
+
+@app.get("/get_user_detail/")
+async def get_user_detail(user_token: str):
+    try:
+        login_user = auth.get_account_info(user_token)
+        data_dict = {}
+        data_dict = login_user.get('users')[0]
+        data_dict.pop('passwordHash')
+        data_dict.pop('passwordUpdatedAt')
+        data_dict.pop('providerUserInfo')
+        data_dict.pop('validSince')
+        data_dict.pop('lastRefreshAt')
+        return data_dict
     except Exception as e:
         return {"error": e}
